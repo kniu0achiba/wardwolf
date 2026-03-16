@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>生物ワードウルフ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* ===== カラーパレット（グリーン系） ===== */
+    :root {
+      --bg: #0f3d2e;            /* ダークグリーン（背景） */
+      --panel: #124734;         /* 本文パネル */
+      --text: #eafaf1;          /* 文字色 */
+      --muted: #cfe7db;         /* 補足文 */
+      --accent: #36a56e;        /* 明るめ緑（ボタン/入力） */
+      --accent-strong: #2e8d5e; /* ホバーなど */
+      --accent-text: #062116;   /* 明るい緑背景上の文字 */
+      --outline: #7cd5a9;       /* 枠線/フォーカス */
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      background: var(--bg); color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP",
+                   "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      line-height: 1.6;
+    }
+
+    /* 画面中央レイアウト */
+    .viewport-center {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px 16px;
+    }
+    .wrap { width: 100%; max-width: 680px; }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: clamp(1.25rem, 2.5vw + 1rem, 1.7rem);
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.05rem, 2vw + 0.8rem, 1.3rem);
+      text-align: center;
+    }
+
+    .center {
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      text-align: center;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      align-items: center;
+      justify-items: center;
+      margin-top: 8px;
+      width: 100%;
+    }
+    @media (min-width: 560px) {
+      .row { grid-template-columns: auto auto; justify-content: center; }
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      max-width: 220px;
+      padding: 14px 16px;
+      font-size: 1rem;
+      color: var(--accent-text);
+      background: var(--accent);
+      border: 2px solid var(--outline);
+      border-radius: 12px;
+      outline: none;
+    }
+    input::placeholder { color: rgba(6,33,22,0.7); }
+
+    button {
+      appearance: none; border: 2px solid var(--outline);
+      background: var(--accent); color: var(--accent-text);
+      padding: 14px 20px; border-radius: 999px; font-size: 1rem; font-weight: 700;
+      cursor: pointer; width: 100%; max-width: 280px;
+      transition: transform 120ms ease, background-color 120ms ease;
+      touch-action: manipulation;
+    }
+    button:hover { background: var(--accent-strong); }
+    button:active { transform: translateY(1px) scale(0.99); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .muted { color: var(--muted); font-size: 0.95rem; text-align: center; }
+
+    .word {
+      display: inline-block; padding: 8px 12px; border-radius: 10px;
+      background: #7cd5a9; color: #052017; font-weight: 800;
+      border: 2px solid var(--outline);
+    }
+
+    .timer {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(2rem, 6vw + 1rem, 3rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      background: #0d3025;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 2px solid var(--outline);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport-center">
+    <div class="wrap">
+      <h1>生物ワードウルフ</h1>
+      <div id="app" class="card" role="region" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script>
+    // ====== 設定 ======
+    const MIN_PLAYERS = 3; // ★ 3人以上
+
+    // ★ 添付Excel（B列「単語」）から抽出した語彙（空欄除去・重複除去のみ）
+    //   ※ 今回のファイルに基づき埋め込み済み。
+    const WORDS = [
+      "DNA","RNA","卵割","ディシェベルドタンパク質","クローニング","電気泳動",
+      "瞳孔","うずまき管","ニューロン","8の字ダンス","アブシシン酸","オーキシン",
+      "栄養段階","生命表","エネルギー効率"
+    ];
+
+    // ====== 状態管理 ======
+    let state = {
+      totalPlayers: 0,
+      currentIndex: 0, // 0-based
+      wolfIndex: null, // 0-based
+      wolfWord: "",
+      villagerWord: "",
+      pair: [],
+      // タイマー関連
+      durationSec: 0,
+      remainMs: 0,
+      tickId: null,
+      startedAt: 0
+    };
+
+    const app = document.getElementById("app");
+    const byId = id => document.getElementById(id);
+
+    // ====== Utility ======
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function pickTwoDistinctWords() {
+      if (WORDS.length < 2) throw new Error("語彙が2語以上必要です。");
+      const s = shuffle(WORDS);
+      return [s[0], s[1]];
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function msToClock(ms) {
+      const total = Math.max(0, Math.ceil(ms / 1000));
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function clearTimer() {
+      if (state.tickId) {
+        clearInterval(state.tickId);
+        state.tickId = null;
+      }
+    }
+
+    // ====== Game Flow ======
+    function startNewGame() {
+      clearTimer();
+      state = {
+        totalPlayers: 0,
+        currentIndex: 0,
+        wolfIndex: null,
+        wolfWord: "",
+        villagerWord: "",
+        pair: [],
+        durationSec: 0,
+        remainMs: 0,
+        tickId: null,
+        startedAt: 0
+      };
+      renderSetup();
+    }
+
+    function commitPlayers(n) {
+      state.totalPlayers = n;
+      const [w1, w2] = pickTwoDistinctWords();
+      const wolfIsFirst = Math.random() < 0.5;
+      state.wolfWord = wolfIsFirst ? w1 : w2;
+      state.villagerWord = wolfIsFirst ? w2 : w1;
+      state.pair = [w1, w2];
+      state.wolfIndex = Math.floor(Math.random() * n);
+      state.currentIndex = 0;
+      renderConfirmTurn();
+    }
+
+    // ====== Screens ======
+    function renderSetup() {
+      app.innerHTML = `
+        <div class="center">
+          <h2>参加人数を入力してください。</h2>
+          <div class="row" aria-label="参加人数の入力と決定ボタン">
+            <input id="numInput" type="number" inputmode="numeric"
+                   min="${MIN_PLAYERS}" step="1" placeholder="${MIN_PLAYERS}以上" />
+            <button id="decideBtn">決定</button>
+          </div>
+          <p class="muted">※ ${MIN_PLAYERS}人以上でプレイできます。</p>
+        </div>
+      `;
+      const input = byId("numInput");
+      const decide = byId("decideBtn");
+      input.addEventListener("keydown", e => { if (e.key === "Enter") decide.click(); });
+      decide.onclick = () => {
+        const val = parseInt(input.value, 10);
+        if (Number.isNaN(val) || val < MIN_PLAYERS) {
+          alert(`人数は ${MIN_PLAYERS} 人以上の整数を入力してください。`);
+          input.focus();
+          return;
+        }
+        commitPlayers(val);
+      };
+      setTimeout(() => input.focus(), 0);
+    }
+
+    function renderConfirmTurn() {
+      const n = state.currentIndex + 1;
+      app.innerHTML = `
+        <div class="center">
+          <h2>${n}人目の人ですか？</h2>
+          <button id="yesBtn" aria-label="${n}人目の確認を開始">はい</button>
+          <p class="muted">※ 画面は本人だけが見てください。</p>
+        </div>
+      `;
+      byId("yesBtn").onclick = () => renderRevealWord();
+    }
+
+    function renderRevealWord() {
+      const isWolf = state.currentIndex === state.wolfIndex;
+      const word = isWolf ? state.wolfWord : state.villagerWord;
+      app.innerHTML = `
+        <div class="center">
+          <h2>あなたのワードは <span class="word">「${escapeHtml(word)}」</span> です。</h2>
+          <button id="okBtn">確認しました。</button>
+        </div>
+      `;
+      byId("okBtn").onclick = () => {
+        state.currentIndex++;
+        if (state.currentIndex >= state.totalPlayers) {
+          renderTimeSetup();
+        } else {
+          renderConfirmTurn();
+        }
+      };
+    }
+
+    function renderTimeSetup() {
+      app.innerHTML = `
+        <div class="center">
+          <h2>何分で話し合いますか？</h2>
+          <div class="row" aria-label="時間の選択と決定ボタン">
+            <select id="timeSelect"></select>
+            <button id="startTimerBtn">決定</button>
+          </div>
+          <p class="muted">※ 30秒〜10分（30秒刻み）</p>
+        </div>
+      `;
+      const sel = byId("timeSelect");
+      // 30秒〜600秒（10分）を30秒刻みで生成
+      for (let sec = 30; sec <= 600; sec += 30) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        const label = `${m}:${String(s).padStart(2, '0')}`;
+        const opt = document.createElement('option');
+        opt.value = String(sec);
+        opt.textContent = label;
+        if (sec === 180) opt.selected = true; // デフォルト 3:00（任意）
+        sel.appendChild(opt);
+      }
+      byId("startTimerBtn").onclick = () => {
+        state.durationSec = parseInt(sel.value, 10);
+        startDiscussionTimer();
+      };
+    }
+
+    function startDiscussionTimer() {
+      clearTimer();
+      state.startedAt = performance.now();
+      state.remainMs = state.durationSec * 1000;
+      renderDiscussionTimer(); // 初回描画
+      state.tickId = setInterval(() => {
+        // 経過を差し引く
+        const now = performance.now();
+        const elapsed = now - state.startedAt;
+        state.remainMs = state.durationSec * 1000 - elapsed;
+        if (state.remainMs <= 0) {
+          clearTimer();
+          renderTimeUp();
+        } else {
+          // 残り時間の表示だけ更新
+          const el = byId("countdown");
+          if (el) el.textContent = msToClock(state.remainMs);
+        }
+      }, 250);
+    }
+
+    function renderDiscussionTimer() {
+      app.innerHTML = `
+        <div class="center">
+          <h2>では、話し合いをしてください。</h2>
+          <div id="countdown" class="timer" aria-live="polite">${msToClock(state.remainMs)}</div>
+          <button id="revealBtn">答え</button>
+        </div>
+      `;
+      byId("revealBtn").onclick = () => {
+        clearTimer();
+        renderAnswer();
+      };
+    }
+
+    function renderTimeUp() {
+      app.innerHTML = `
+        <div class="center">
+          <h2>時間です。人狼を1人選んでください。</h2>
+          <button id="revealBtn">答え</button>
+        </div>
+      `;
+      byId("revealBtn").onclick = () => {
+        renderAnswer();
+      };
+    }
+
+    function renderAnswer() {
+      app.innerHTML = `
+        <div class="center">
+          <h2>答え</h2>
+          <p>人狼のワード：<span class="word">「${escapeHtml(state.wolfWord)}」</span></p>
+          <p>村人のワード：<span class="word">「${escapeHtml(state.villagerWord)}」</span></p>
+          <button id="restartBtn">新しいゲームを始める</button>
+        </div>
+      `;
+      byId("restartBtn").onclick = () => startNewGame();
+    }
+
+    // 初期表示
+    startNewGame();
+  </script>
+</body>
+</html>
