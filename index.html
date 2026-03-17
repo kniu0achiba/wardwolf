@@ -1,383 +1,296 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>生物ワードウルフ</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    /* ===== カラーパレット（グリーン系） ===== */
-    :root {
-      --bg: #0f3d2e;            /* ダークグリーン（背景） */
-      --panel: #124734;         /* 本文パネル */
-      --text: #eafaf1;          /* 文字色 */
-      --muted: #cfe7db;         /* 補足文 */
-      --accent: #36a56e;        /* 明るめ緑（ボタン/入力） */
-      --accent-strong: #2e8d5e; /* ホバーなど */
-      --accent-text: #062116;   /* 明るい緑背景上の文字 */
-      --outline: #7cd5a9;       /* 枠線/フォーカス */
-    }
+<meta charset="UTF-8">
+<title>生物ワードウルフ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0; padding: 0; height: 100%;
-      background: var(--bg); color: var(--text);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP",
-                   "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-      line-height: 1.6;
-    }
+<style>
+:root{
+  --bg:#0f3d2e;
+  --panel:#124734;
+  --accent:#36a56e;
+  --text:#eafaf1;
+  --outline:#7cd5a9;
+}
 
-    /* 画面中央レイアウト */
-    .viewport-center {
-      min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      padding: 24px 16px;
-    }
-    .wrap { width: 100%; max-width: 680px; }
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Noto Sans JP",system-ui,sans-serif;
+}
 
-    h1 {
-      margin: 0 0 16px;
-      font-size: clamp(1.25rem, 2.5vw + 1rem, 1.7rem);
-      text-align: center;
-      letter-spacing: 0.02em;
-    }
+.center-screen{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:16px;
+}
 
-    .card {
-      background: var(--panel);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 14px;
-      padding: 22px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    }
+.card{
+  width:100%;
+  max-width:680px;
+  background:var(--panel);
+  border-radius:14px;
+  padding:24px;
+  text-align:center;
+}
 
-    h2 {
-      margin: 0 0 14px;
-      font-size: clamp(1.05rem, 2vw + 0.8rem, 1.3rem);
-      text-align: center;
-    }
+select,input,button{
+  width:100%;
+  max-width:280px;
+  padding:14px;
+  font-size:1rem;
+  border-radius:999px;
+  border:2px solid var(--outline);
+}
 
-    .center {
-      display: flex; flex-direction: column; align-items: center; gap: 14px;
-      text-align: center;
-    }
+button{
+  margin-top:12px;
+  background:var(--accent);
+  color:#062116;
+  font-weight:bold;
+  cursor:pointer;
+}
 
-    .row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      align-items: center;
-      justify-items: center;
-      margin-top: 8px;
-      width: 100%;
-    }
-    @media (min-width: 560px) {
-      .row { grid-template-columns: auto auto; justify-content: center; }
-    }
-
-    input[type="number"], select {
-      width: 100%;
-      max-width: 220px;
-      padding: 14px 16px;
-      font-size: 1rem;
-      color: var(--accent-text);
-      background: var(--accent);
-      border: 2px solid var(--outline);
-      border-radius: 12px;
-      outline: none;
-    }
-    input::placeholder { color: rgba(6,33,22,0.7); }
-
-    button {
-      appearance: none; border: 2px solid var(--outline);
-      background: var(--accent); color: var(--accent-text);
-      padding: 14px 20px; border-radius: 999px; font-size: 1rem; font-weight: 700;
-      cursor: pointer; width: 100%; max-width: 280px;
-      transition: transform 120ms ease, background-color 120ms ease;
-      touch-action: manipulation;
-    }
-    button:hover { background: var(--accent-strong); }
-    button:active { transform: translateY(1px) scale(0.99); }
-    button:disabled { opacity: 0.55; cursor: not-allowed; }
-
-    .muted { color: var(--muted); font-size: 0.95rem; text-align: center; }
-
-    .word {
-      display: inline-block; padding: 8px 12px; border-radius: 10px;
-      background: #7cd5a9; color: #052017; font-weight: 800;
-      border: 2px solid var(--outline);
-    }
-
-    .timer {
-      font-variant-numeric: tabular-nums;
-      font-size: clamp(2rem, 6vw + 1rem, 3rem);
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      background: #0d3025;
-      padding: 8px 16px;
-      border-radius: 10px;
-      border: 2px solid var(--outline);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * { transition: none !important; }
-    }
-  </style>
+.word{
+  display:inline-block;
+  padding:10px 16px;
+  background:#7cd5a9;
+  color:#052017;
+  border-radius:10px;
+  font-weight:bold;
+}
+</style>
 </head>
+
 <body>
-  <div class="viewport-center">
-    <div class="wrap">
-      <h1>生物ワードウルフ</h1>
-      <div id="app" class="card" role="region" aria-live="polite"></div>
-    </div>
+<div class="center-screen">
+  <div class="card">
+    <h1>生物ワードウルフ</h1>
+    <div id="app"></div>
   </div>
+</div>
 
-  <script>
-    // ====== 設定 ======
-    const MIN_PLAYERS = 3; // ★ 3人以上
+<script>
+const DATA = {
+  "生物の進化":{
+    "1":["DNA","RNA","RNAワールド","突然変異","置換","挿入","欠失"],
+    "2":["シアノバクテリア","ストロマトライト","細胞内共生"],
+    "3":["古生代","中生代","新生代"],
+    "4":["減数分裂","受精","遺伝子型","対立遺伝子"],
+    "5":["自然選択","適応","共進化","性選択"],
+    "6":["分類","ドメイン","学名"],
+    "7":["細菌","真核生物","植物","動物"],
+    "8":["霊長類","類人猿","ホモ・サピエンス"]
+  },
+  "細胞と分子":{
+    "9":["タンパク質","脂質","核酸","炭水化物"],
+    "10":["細胞小器官","細胞質","流動モザイクモデル"],
+    "11":["ペプチド結合","αヘリックス","βシート"],
+    "12":["原核細胞","真核細胞","多細胞生物"],
+    "13":["ミトコンドリア","葉緑体","核膜"],
+    "14":["微小管","アクチンフィラメント","中間径フィラメント"],
+    "15":["酵素","基質","活性部位"],
+    "16":["拡散","能動輸送","ナトリウムポンプ"]
+  },
+  "代謝":{
+    "17":["呼吸","光合成","ATP","ADP"],
+    "18":["クエン酸回路","電子伝達系","酸化的リン酸化"],
+    "19":["クロロフィル","光化学系","カルビン回路"],
+    "20":["C3植物","C4植物","CAM植物"]
+  }
+};
 
-    // ★ 添付Excel（B列「単語」）から抽出した語彙（空欄除去・重複除去のみ）
-    //   ※ 今回のファイルに基づき埋め込み済み。
-    const WORDS = [
-      "DNA","RNA","卵割","ディシェベルドタンパク質","クローニング","電気泳動",
-      "瞳孔","うずまき管","ニューロン","8の字ダンス","アブシシン酸","オーキシン",
-      "栄養段階","生命表","エネルギー効率"
-    ];
+let state = {
+  timer:null,
+  timeLeft:0
+};
 
-    // ====== 状態管理 ======
-    let state = {
-      totalPlayers: 0,
-      currentIndex: 0, // 0-based
-      wolfIndex: null, // 0-based
-      wolfWord: "",
-      villagerWord: "",
-      pair: [],
-      // タイマー関連
-      durationSec: 0,
-      remainMs: 0,
-      tickId: null,
-      startedAt: 0
-    };
+const app = document.getElementById("app");
 
-    const app = document.getElementById("app");
-    const byId = id => document.getElementById(id);
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
 
-    // ====== Utility ======
-    function shuffle(arr) {
-      const a = arr.slice();
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
+/* 単元選択 */
+function showUnitSelect(){
+  app.innerHTML=`
+    <h2>単元を選択してください</h2>
+    <select id="unit">
+      <!-- 未選択時の表示（プレースホルダー的役割） -->
+      <option value="" disabled selected>例：生物の進化</option>
+
+      <!-- ランダム選択 -->
+      <option value="random">ランダム</option>
+
+      <!-- 通常の単元 -->
+      ${Object.keys(DATA).map(u=>`<option value="${u}">${u}</option>`).join("")}
+    </select>
+    <button onclick="decideUnit()">決定</button>
+  `;
+}
+
+function decideUnit(){
+  const unit = document.getElementById("unit").value;
+
+  // 何も選ばれていない場合のガード
+  if(unit === ""){
+    alert("単元を選択してください。");
+    return;
+  }
+
+  // 🔴 ランダムモード
+  if(unit === "random"){
+
+    const allWords = [];
+
+    // DATA内の全単語を1つの配列にまとめる
+    Object.values(DATA).forEach(unitObj => {
+      Object.values(unitObj).forEach(group => {
+        allWords.push(...group);
+      });
+    });
+
+    /*
+      Setを使って重複を除去
+      → 同一単語が複数あっても1回だけ残る
+    */
+    const uniqueWords = [...new Set(allWords)];
+
+    // シャッフルして先頭2つを使用
+    const w = shuffle([...uniqueWords]);
+    state.wolfWord = w[0];
+    state.villagerWord = w[1];
+  }
+  // 🟢 通常モード（従来どおり）
+  else{
+    const group = shuffle(Object.values(DATA[unit]))[0];
+    const w = shuffle([...group]);
+    state.wolfWord = w[0];
+    state.villagerWord = w[1];
+  }
+
+  showNumberInput();
+}
+
+/* 人数入力 */
+function showNumberInput(){
+  app.innerHTML=`
+    <h2>参加人数（3人以上）</h2>
+    <input id="num" type="number" min="3">
+    <button onclick="startGame()">決定</button>
+  `;
+}
+
+function startGame(){
+  const n=Number(document.getElementById("num").value);
+  if(n<3){
+    alert("3人以上で参加してください。");
+    return;
+  }
+  state.total=n;
+  state.wolfIndex=Math.floor(Math.random()*n);
+  state.current=0;
+  nextPlayer();
+}
+
+/* 各自確認 */
+function nextPlayer(){
+  if(state.current>=state.total){
+    showTimerSetting();
+    return;
+  }
+  app.innerHTML=`
+    <h2>${state.current+1}人目の人ですか？</h2>
+    <button onclick="showWord()">はい</button>
+  `;
+}
+
+function showWord(){
+  const word = state.current===state.wolfIndex ? state.wolfWord : state.villagerWord;
+  app.innerHTML=`
+    <h2>あなたのワードは<br>
+    <span class="word">「${word}」</span></h2>
+    <button onclick="confirm()">確認しました</button>
+  `;
+}
+
+function confirm(){
+  state.current++;
+  nextPlayer();
+}
+
+/* タイマー設定 */
+function showTimerSetting(){
+  let options="";
+  for(let i=30;i<=600;i+=30){
+    options+=`<option value="${i}">${i/60>=1?`${i/60}分`:`${i}秒`}</option>`;
+  }
+  app.innerHTML=`
+    <h2>話し合い時間を選択</h2>
+    <select id="time">${options}</select>
+    <button onclick="startTimer()">ゲームを話し合いを始める</button>
+  `;
+}
+
+
+/* タイマー表示用（mm:ss） */
+function formatTime(sec){
+  const m = String(Math.floor(sec / 60)).padStart(2,"0");
+  const s = String(sec % 60).padStart(2,"0");
+  return `${m}:${s}`;
+}
+
+/* タイマー開始 */
+function startTimer(){
+  state.timeLeft=Number(document.getElementById("time").value);
+  showTimer();
+  state.timer=setInterval(()=>{
+    state.timeLeft--;
+    showTimer();
+    if(state.timeLeft<=0){
+      clearInterval(state.timer);
+      showEnd();
     }
+  },1000);
+}
 
-    function pickTwoDistinctWords() {
-      if (WORDS.length < 2) throw new Error("語彙が2語以上必要です。");
-      const s = shuffle(WORDS);
-      return [s[0], s[1]];
-    }
+function showTimer(){
+  app.innerHTML=`
+    <h2>残り時間：${formatTime(state.timeLeft)}</h2>
+    <button onclick="showAnswer()">答え</button>
+  `;
+}
 
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
+/* 終了 */
+function showEnd(){
+  app.innerHTML=`
+    <h2>終了です。<br>
+    人狼だと思う人とその単語を考えてください。</h2>
+    <button onclick="showAnswer()">答え</button>
+  `;
+}
 
-    function msToClock(ms) {
-      const total = Math.max(0, Math.ceil(ms / 1000));
-      const m = Math.floor(total / 60);
-      const s = total % 60;
-      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    }
+/* 答え表示 */
+function showAnswer(){
+  clearInterval(state.timer);
+  app.innerHTML=`
+    <h2>答え</h2>
+    <p>🐺 人狼の単語：<span class="word">${state.wolfWord}</span></p>
+    <p>👨‍🌾 村人の単語：<span class="word">${state.villagerWord}</span></p>
+    <button onclick="showUnitSelect()">新しいゲームを始める</button>
+  `;
+}
 
-    function clearTimer() {
-      if (state.tickId) {
-        clearInterval(state.tickId);
-        state.tickId = null;
-      }
-    }
-
-    // ====== Game Flow ======
-    function startNewGame() {
-      clearTimer();
-      state = {
-        totalPlayers: 0,
-        currentIndex: 0,
-        wolfIndex: null,
-        wolfWord: "",
-        villagerWord: "",
-        pair: [],
-        durationSec: 0,
-        remainMs: 0,
-        tickId: null,
-        startedAt: 0
-      };
-      renderSetup();
-    }
-
-    function commitPlayers(n) {
-      state.totalPlayers = n;
-      const [w1, w2] = pickTwoDistinctWords();
-      const wolfIsFirst = Math.random() < 0.5;
-      state.wolfWord = wolfIsFirst ? w1 : w2;
-      state.villagerWord = wolfIsFirst ? w2 : w1;
-      state.pair = [w1, w2];
-      state.wolfIndex = Math.floor(Math.random() * n);
-      state.currentIndex = 0;
-      renderConfirmTurn();
-    }
-
-    // ====== Screens ======
-    function renderSetup() {
-      app.innerHTML = `
-        <div class="center">
-          <h2>参加人数を入力してください。</h2>
-          <div class="row" aria-label="参加人数の入力と決定ボタン">
-            <input id="numInput" type="number" inputmode="numeric"
-                   min="${MIN_PLAYERS}" step="1" placeholder="${MIN_PLAYERS}以上" />
-            <button id="decideBtn">決定</button>
-          </div>
-          <p class="muted">※ ${MIN_PLAYERS}人以上でプレイできます。</p>
-        </div>
-      `;
-      const input = byId("numInput");
-      const decide = byId("decideBtn");
-      input.addEventListener("keydown", e => { if (e.key === "Enter") decide.click(); });
-      decide.onclick = () => {
-        const val = parseInt(input.value, 10);
-        if (Number.isNaN(val) || val < MIN_PLAYERS) {
-          alert(`人数は ${MIN_PLAYERS} 人以上の整数を入力してください。`);
-          input.focus();
-          return;
-        }
-        commitPlayers(val);
-      };
-      setTimeout(() => input.focus(), 0);
-    }
-
-    function renderConfirmTurn() {
-      const n = state.currentIndex + 1;
-      app.innerHTML = `
-        <div class="center">
-          <h2>${n}人目の人ですか？</h2>
-          <button id="yesBtn" aria-label="${n}人目の確認を開始">はい</button>
-          <p class="muted">※ 画面は本人だけが見てください。</p>
-        </div>
-      `;
-      byId("yesBtn").onclick = () => renderRevealWord();
-    }
-
-    function renderRevealWord() {
-      const isWolf = state.currentIndex === state.wolfIndex;
-      const word = isWolf ? state.wolfWord : state.villagerWord;
-      app.innerHTML = `
-        <div class="center">
-          <h2>あなたのワードは <span class="word">「${escapeHtml(word)}」</span> です。</h2>
-          <button id="okBtn">確認しました。</button>
-        </div>
-      `;
-      byId("okBtn").onclick = () => {
-        state.currentIndex++;
-        if (state.currentIndex >= state.totalPlayers) {
-          renderTimeSetup();
-        } else {
-          renderConfirmTurn();
-        }
-      };
-    }
-
-    function renderTimeSetup() {
-      app.innerHTML = `
-        <div class="center">
-          <h2>何分で話し合いますか？</h2>
-          <div class="row" aria-label="時間の選択と決定ボタン">
-            <select id="timeSelect"></select>
-            <button id="startTimerBtn">決定</button>
-          </div>
-          <p class="muted">※ 30秒〜10分（30秒刻み）</p>
-        </div>
-      `;
-      const sel = byId("timeSelect");
-      // 30秒〜600秒（10分）を30秒刻みで生成
-      for (let sec = 30; sec <= 600; sec += 30) {
-        const m = Math.floor(sec / 60);
-        const s = sec % 60;
-        const label = `${m}:${String(s).padStart(2, '0')}`;
-        const opt = document.createElement('option');
-        opt.value = String(sec);
-        opt.textContent = label;
-        if (sec === 180) opt.selected = true; // デフォルト 3:00（任意）
-        sel.appendChild(opt);
-      }
-      byId("startTimerBtn").onclick = () => {
-        state.durationSec = parseInt(sel.value, 10);
-        startDiscussionTimer();
-      };
-    }
-
-    function startDiscussionTimer() {
-      clearTimer();
-      state.startedAt = performance.now();
-      state.remainMs = state.durationSec * 1000;
-      renderDiscussionTimer(); // 初回描画
-      state.tickId = setInterval(() => {
-        // 経過を差し引く
-        const now = performance.now();
-        const elapsed = now - state.startedAt;
-        state.remainMs = state.durationSec * 1000 - elapsed;
-        if (state.remainMs <= 0) {
-          clearTimer();
-          renderTimeUp();
-        } else {
-          // 残り時間の表示だけ更新
-          const el = byId("countdown");
-          if (el) el.textContent = msToClock(state.remainMs);
-        }
-      }, 250);
-    }
-
-    function renderDiscussionTimer() {
-      app.innerHTML = `
-        <div class="center">
-          <h2>では、話し合いをしてください。</h2>
-          <div id="countdown" class="timer" aria-live="polite">${msToClock(state.remainMs)}</div>
-          <button id="revealBtn">答え</button>
-        </div>
-      `;
-      byId("revealBtn").onclick = () => {
-        clearTimer();
-        renderAnswer();
-      };
-    }
-
-    function renderTimeUp() {
-      app.innerHTML = `
-        <div class="center">
-          <h2>時間です。人狼を1人選んでください。</h2>
-          <button id="revealBtn">答え</button>
-        </div>
-      `;
-      byId("revealBtn").onclick = () => {
-        renderAnswer();
-      };
-    }
-
-    function renderAnswer() {
-      app.innerHTML = `
-        <div class="center">
-          <h2>答え</h2>
-          <p>人狼のワード：<span class="word">「${escapeHtml(state.wolfWord)}」</span></p>
-          <p>村人のワード：<span class="word">「${escapeHtml(state.villagerWord)}」</span></p>
-          <button id="restartBtn">新しいゲームを始める</button>
-        </div>
-      `;
-      byId("restartBtn").onclick = () => startNewGame();
-    }
-
-    // 初期表示
-    startNewGame();
-  </script>
+showUnitSelect();
+</script>
 </body>
 </html>
