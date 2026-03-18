@@ -58,11 +58,33 @@ button{
 
 .word{
   display:inline-block;
-  padding:10px 16px;
+  padding:12px 20px;
   background:#7cd5a9;
   color:#052017;
   border-radius:10px;
   font-weight:bold;
+  font-size:1.4rem;   /* 答えを大きくして強調 */
+}
+
+/* タイマー表示用 */
+.timer-box{
+  display:inline-block;        /* 中身の大きさに合わせる */
+  margin:16px auto;
+  padding:16px 18px;           /* 1～2周り分だけ余白 */
+  background:#155d45;          /* 背景より少しだけ明るい緑 */
+  border:3px solid var(--outline);
+  border-radius:18px;          /* 角丸の四角 */
+  font-size:2.2rem;            /* タイマー文字を大きく */
+  font-weight:bold;
+  letter-spacing:0.05em;
+  text-align:center;
+}
+
+/* タイマーと答えボタンを縦に並べる */
+.timer-area{
+  display:flex;
+  flex-direction:column;   /* 上から下に並べる */
+  align-items:center;      /* 横方向を中央揃え */
 }
 </style>
 </head>
@@ -237,7 +259,7 @@ function showTimerSetting(){
   app.innerHTML=`
     <h2>話し合い時間を選択</h2>
     <select id="time">${options}</select>
-    <button onclick="startTimer()">ゲームを話し合いを始める</button>
+    <button onclick="startTimer()">話し合いを始める</button>
   `;
 }
 
@@ -265,8 +287,13 @@ function startTimer(){
 
 function showTimer(){
   app.innerHTML=`
-    <h2>残り時間：${formatTime(state.timeLeft)}</h2>
-    <button onclick="showAnswer()">答え</button>
+    <h2>残り時間</h2>
+    <div class="timer-area">
+      <div class="timer-box">
+        ${formatTime(state.timeLeft)}
+      </div>
+      <button onclick="showAnswer()">答え</button>
+    </div>
   `;
 }
 
